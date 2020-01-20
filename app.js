@@ -121,12 +121,11 @@ function drawQn(qn){
 function drawAns(ans){
 	var canvas = document.getElementById("ans")
 	var anscard = document.createElement('div')
-	anscard.setAttribute('class', 'card col')
+	anscard.setAttribute('class', 'card col border-left-primary')
 	anscard.setAttribute('id', 'anscard')
 	anscard.setAttribute('style', 'width: 15rem;')
 	var cardbody = document.createElement('div')
 	cardbody.setAttribute('class', 'card-body')
-
 	var anstext = document.createElement('a')
 	anstext.href = "#"
 	anstext.setAttribute('class','card-text stretched-link')
@@ -137,6 +136,7 @@ function drawAns(ans){
 	canvas.appendChild(anscard)
 	anscard.appendChild(cardbody)
 	cardbody.appendChild(anstext)
+
 
 }
 

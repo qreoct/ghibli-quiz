@@ -11,6 +11,7 @@ var qnArray = [];
 
 function generateQuiz() {
 	//generate topic and difficulty
+	var answered = false;
     var difficulty = document.querySelector('[name="options"]:checked').value;
     var topic = "";
     var focus = "";
@@ -33,7 +34,7 @@ function generateQuiz() {
 					var focuses = ["description"]
 				break;
 				case 'difficult':
-					var focuses = ["release_date"]
+					var focuses = ["release_date", "director"]
 				break;
 			}
 			break;
@@ -60,17 +61,19 @@ function generateQuiz() {
 	topic: Films / Species
 	focus: Description / Films
 	*/
-
-    setQn(difficulty.value, topic, focus, objname)
+    setQn(difficulty.value, topic, focus, objname, createEventListeners)
     document.getElementById('qn').innerHTML = ""
     document.getElementById('ans').innerHTML = ""
 
 
 	// checking answer code
-	document.getElementById("ans").addEventListener( "click", handler)
+	function createEventListeners(){
+		document.getElementById("ans").onclick = handler
+	}
 
 	function handler(event){
-		console.log('topic is ', topic)
+		console.log('currtarget', event.currentTarget)
+		console.log('evaluating answer... topic was ', topic)
 		checkAns(event.target.innerHTML, objname, topic, focus)
 	}
 
@@ -78,18 +81,23 @@ function generateQuiz() {
 		var ansID = qnArray[0].id
 		queryAPI(topic+'/'+ansID, (res) => {
 			console.log('response of query is', res)
-			if (res[focus] === attempt){
-				alert('correct!')
-				document.getElementById("ans").removeEventListener( "click", handler)
+			console.log('correct ans...', res[focus])
+			console.log('attempt was...', attempt)
+			if (res[focus].substring(0,100) === attempt.substring(0,100)){
+				answered = true;
+				alert('correct!');
 			}else{
-				alert('wrong!')
+				answered = true;
+				alert('wrong!');
 			}
+
+
 		})
 	}
 
 }
 
-function setQn(difficulty, topic, focus, objname){
+function setQn(difficulty, topic, focus, objname, cb){
 	var ansArray = []
 	/* qn is an object in the form
 		name: Ponyo
@@ -103,7 +111,7 @@ function setQn(difficulty, topic, focus, objname){
 	*/
 
 	function getRandQn(qnslist) {
-		console.log("3: getqn stage")
+		//console.log("3: getqn stage")
 		randomqn = qnslist[getRandom(0,qnslist.length)]
 		var qn = {
 			name: randomqn[objname],
@@ -128,14 +136,24 @@ function setQn(difficulty, topic, focus, objname){
 		addQn(qn)
 		addAns(qn.ans)
 
-		qn2 = getRandQn(result)
-		qn3 = getRandQn(result)
+		var qn2 = qn3 = qn
+		while (qn2.ans == qn.ans) {
+			console.log('rolling new qn2... got')
+			qn2 = getRandQn(result)
+			console.log(qn2.ans)
+		}
+		while (qn3.ans == qn.ans || qn3.ans == qn2.ans) {
+			console.log('rolling new qn3... got')
+			qn3 = getRandQn(result)
+			console.log(qn3.ans)
+		}
 		addAns( qn2.ans )
 		addAns( qn3.ans )
 		shuffle(ansArray)
 		ansArray.forEach(ans => {
 			drawAns(ans)
 		})
+		cb()
 	});
 
 
@@ -176,7 +194,7 @@ function drawQn(qn){
 	var cardtext = document.createElement('p')
 	cardtext.setAttribute('class','card-text')
 
-	cardtitle.textContent = qn.name
+	cardtitle.textContent = qn.topic.toUpperCase()
 	cardtext.textContent = "What is the " + qn.focus + " of " + qn.name + "?"
 
 	canvas.appendChild(qncard)
@@ -188,11 +206,11 @@ function drawQn(qn){
 function drawAns(ans){
 	var canvas = document.getElementById("ans")
 	var anscard = document.createElement('div')
-	anscard.setAttribute('class', 'card col anscard')
+	anscard.setAttribute('class', 'card col border-left-gradient')
+	anscard.setAttribute('id', 'anscard')
 	anscard.setAttribute('style', 'width: 15rem;')
 	var cardbody = document.createElement('div')
 	cardbody.setAttribute('class', 'card-body')
-
 	var anstext = document.createElement('a')
 	anstext.href = "#"
 	anstext.setAttribute('class','card-text stretched-link')
@@ -203,6 +221,7 @@ function drawAns(ans){
 	canvas.appendChild(anscard)
 	anscard.appendChild(cardbody)
 	cardbody.appendChild(anstext)
+
 
 }
 
