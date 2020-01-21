@@ -7,6 +7,9 @@ var difficulties = document.getElementsByName("options")
 sendbtn.addEventListener("click", generateQuiz)
 clearbtn.addEventListener("click", clearHTML)
 
+var score = 0
+var scorecounter = document.getElementById("score_val")
+
 var qnArray = [];
 
 function generateQuiz() {
@@ -20,7 +23,7 @@ function generateQuiz() {
 			var topics = ['films', 'people'];
 			break;
 		case 'difficult': 
-			var topics = ['films', 'people', 'species'];
+			var topics = ['films', 'people', 'species', 'locations', 'vehicles'];
 			break;
 		default :
 			break;
@@ -51,7 +54,15 @@ function generateQuiz() {
 			break;
 		case 'species':
 			var objname = 'name'
-			var focuses = ['name']
+			var focuses = ['name', 'people']
+			break;
+		case 'vehicles':
+			var objname = 'name'
+			var focuses = ['description', 'films']
+			break;
+		case 'locations':
+			var objname = 'name'
+			var focuses = ['films']
 			break;
 	}
 	var focus = focuses[getRandom(0,focuses.length)]
@@ -74,21 +85,39 @@ function generateQuiz() {
 	function handler(event){
 		console.log('currtarget', event.currentTarget)
 		console.log('evaluating answer... topic was ', topic)
-		checkAns(event.target.innerHTML, objname, topic, focus)
+		checkAns(event.target.innerHTML, objname, topic, focus, difficulty)
 	}
 
-	function checkAns(attempt, name, topic, focus){
+	function checkAns(attempt, name, topic, focus, difficulty){
 		var ansID = qnArray[0].id
 		queryAPI(topic+'/'+ansID, (res) => {
 			console.log('response of query is', res)
 			console.log('correct ans...', res[focus])
 			console.log('attempt was...', attempt)
-			if (res[focus].substring(0,100) === attempt.substring(0,100)){
+			if (res[focus].substring(0,20) === attempt.substring(0,20)){
 				answered = true;
-				alert('correct!');
+				var mod;
+				if (difficulty == 'easy'){
+					mod = 2;
+				}else{
+					mod = 5;
+				}
+				$("#toast_correct").toast('show');
+				$(".toast-body").html('Score +' + mod)
+				score+=mod
+				score_val.innerHTML = score
+				generateQuiz()
 			}else{
 				answered = true;
-				alert('wrong!');
+				if (difficulty == 'easy'){
+					mod = -3
+				}else{
+					mod = -7
+				}
+				$("#toast_wrong").toast('show');
+				$(".toast-body").html('Score -' + mod)
+				score+=mod
+				score_val.innerHTML = score
 			}
 
 
@@ -113,6 +142,9 @@ function setQn(difficulty, topic, focus, objname, cb){
 	function getRandQn(qnslist) {
 		//console.log("3: getqn stage")
 		randomqn = qnslist[getRandom(0,qnslist.length)]
+		if (typeof randomqn[focus] == Array){
+			console.log('array!!')
+		}
 		var qn = {
 			name: randomqn[objname],
 			id: randomqn['id'],
@@ -126,6 +158,13 @@ function setQn(difficulty, topic, focus, objname, cb){
 	function addQn(qn){
 		qnArray = [];
 		qnArray.push(qn)
+	}
+
+	function CleanURL(qry, cb){
+		console.log('CleanURL running! query:', qry)
+		queryAPI(qry, (data) => {
+			cb(data)
+		});
 	}
 
 	// get and draw qn
@@ -195,7 +234,7 @@ function drawQn(qn){
 	cardtext.setAttribute('class','card-text')
 
 	cardtitle.textContent = qn.topic.toUpperCase()
-	cardtext.textContent = "What is the " + qn.focus + " of " + qn.name + "?"
+	cardtext.textContent = "What is the " + qn.focus.split("_").join(" ") + " of " + qn.name + "?"
 
 	canvas.appendChild(qncard)
 	qncard.appendChild(cardtitle)
