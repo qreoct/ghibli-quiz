@@ -8,7 +8,11 @@ sendbtn.addEventListener("click", generateQuiz)
 clearbtn.addEventListener("click", clearHTML)
 
 var score = 0
+var streak = 0
+var beststreak = 0
 var scorecounter = document.getElementById("score_val")
+var curr_streak_counter = document.getElementById("curr_streak")
+var best_streak_counter = document.getElementById("best_streak")
 
 var qnArray = [];
 
@@ -120,6 +124,12 @@ function generateQuiz() {
 			}else{
 				mod = 5;
 			}
+			streak += 1
+			if (streak > beststreak){
+				beststreak = streak
+			}
+			curr_streak_counter.innerHTML = streak
+			best_streak_counter.innerHTML = beststreak
 			showToast('correct',mod)
 			generateQuiz()
 		}else{
@@ -129,6 +139,9 @@ function generateQuiz() {
 			}else{
 				mod = -7
 			}
+			streak = 0
+			curr_streak_counter.innerHTML = streak
+			best_streak_counter.innerHTML = beststreak
 			showToast('wrong',mod)
 		}
 
@@ -351,7 +364,7 @@ function drawAns(ans){
 	anstext.href = "#"
 	anstext.setAttribute('class','card-text stretched-link')
 	anstext.setAttribute('name', 'anstext')
-	ans.length > 50 ? text = ans.substring(0,100)+'...': text = ans
+	ans.length > 50 ? text = ans.substring(0,60)+'...': text = ans
 	anstext.textContent = text
 
 	canvas.appendChild(anscard)

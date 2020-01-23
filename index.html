@@ -10,7 +10,7 @@
 <div class="container">
 	<br>
 	<div class="jumbotron">
-		<h1 class="display-4" style="text-align: center"> System serverless </h1>
+		<h3 class="display-4" style="text-align: center"> Studio Ghibli Quiz </h3>
 		<br>
 		<div class="btn-group" data-toggle="buttons">
 			<label class="btn btn-success"><input type="radio" name="options" value="easy" id="radio_easy">Easy</label>
@@ -28,8 +28,14 @@
 	</div>
 
 	<div class="container" id="score">
+		<div class="row">
 		<h6>SCORE</h6>
 		<p id="score_val">0</p>
+		<h6>STREAK</h6>
+		<p id="curr_streak">0</p>
+		<h6>BEST STREAK</h6>
+		<p id="best_streak">0</p>
+		</div>
 	</div>
 
 	<div class="container" id="toasts">
@@ -38,7 +44,7 @@
 	        <strong class="mr-auto" style="color:darkgreen;"> Answer correct!</strong>
 	        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
 	    </div>
-	    <div class="toast-body"></div>
+	    <div class="toast-body"> </div>
 	</div>
 
 	<div class="toast" id="toast_wrong" data-delay="3000">
@@ -50,6 +56,10 @@
 	        Wrong
 	    </div>
 		</div>
+	</div>
+
+	<div class="container" style="position:fixed; top:80vh">
+		<img src="Studio_Ghibli_logo.svg">
 	</div>
 
 
