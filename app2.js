@@ -29,6 +29,7 @@ function generateQuiz() {
 			break;
 	}
 	var topic = topics[getRandom(0,topics.length)]
+	// setting question types!
 	switch(topic){
 		case 'films':
 			var objname = 'title'
@@ -48,13 +49,13 @@ function generateQuiz() {
 					var focuses = ["age", "gender"]
 				break;
 				case 'difficult':
-					var focuses = ["eye_color", "hair_color"]
+					var focuses = ["eye_color", "hair_color", "species"]
 				break;
 			}
 			break;
 		case 'species':
 			var objname = 'name'
-			var focuses = ['name', 'people']
+			var focuses = ['people']
 			break;
 		case 'vehicles':
 			var objname = 'name'
@@ -68,10 +69,11 @@ function generateQuiz() {
 	var focus = focuses[getRandom(0,focuses.length)]
 
 	/* so now we have
-	objname: Ponyo / Cat
-	topic: Films / Species
-	focus: Description / Films
+	objname: Ponyo / Cat / The Cat Kingdom
+	topic: Films / Species / Locations
+	focus: Description / Name / Films
 	*/
+	console.log('setting qn...')
     setQn(difficulty.value, topic, focus, objname, createEventListeners)
     document.getElementById('qn').innerHTML = ""
     document.getElementById('ans').innerHTML = ""
@@ -84,46 +86,69 @@ function generateQuiz() {
 
 	function handler(event){
 		console.log('currtarget', event.currentTarget)
-		console.log('evaluating answer... topic was ', topic)
-		checkAns(event.target.innerHTML, objname, topic, focus, difficulty)
-	}
+		console.log('evaluating answer... topic was', topic)
 
-	function checkAns(attempt, name, topic, focus, difficulty){
-		var ansID = qnArray[0].id
-		queryAPI(topic+'/'+ansID, (res) => {
-			console.log('response of query is', res)
-			console.log('correct ans...', res[focus])
-			console.log('attempt was...', attempt)
-			if (res[focus].substring(0,20) === attempt.substring(0,20)){
-				answered = true;
-				var mod;
-				if (difficulty == 'easy'){
-					mod = 2;
-				}else{
-					mod = 5;
-				}
-				$("#toast_correct").toast('show');
-				$(".toast-body").html('Score +' + mod)
-				score+=mod
-				score_val.innerHTML = score
-				generateQuiz()
+
+		if (qn.ans.toString().substring(0,4) == 'http'){
+			if (typeof qn.ans === 'object'){
+				console.log ('=== should be 1 link:',qn.ans[0])
+				var tobeCleaned = qn.ans[0]
 			}else{
-				answered = true;
-				if (difficulty == 'easy'){
-					mod = -3
-				}else{
-					mod = -7
-				}
-				$("#toast_wrong").toast('show');
-				$(".toast-body").html('Score -' + mod)
-				score+=mod
-				score_val.innerHTML = score
+				var tobeCleaned = qn.ans
 			}
+			CleanURL(tobeCleaned, (res) => {
+				if (res.title) {
+					checkAns(event.target.innerHTML, objname, topic, focus, difficulty, res.title)
+				} else {
+					checkAns(event.target.innerHTML, objname, topic, focus, difficulty, res.name)
 
-
-		})
+				}
+			});
+		}else{
+			checkAns(event.target.innerHTML, objname, topic, focus, difficulty, qn.ans)
+		}
 	}
 
+	function checkAns(attempt, name, topic, focus, difficulty, ans){
+		console.log('checkans answer is ', ans)
+		console.log('attempt was...', attempt)
+		if (ans.substring(0,20) === attempt.substring(0,20)){
+			answered = true;
+			var mod;
+			if (difficulty == 'easy'){
+				mod = 2;
+			}else{
+				mod = 5;
+			}
+			$("#toast_correct").toast('show');
+			$(".toast-body").html('Score +' + mod)
+			score+=mod
+			score_val.innerHTML = score
+			generateQuiz()
+		}else{
+			answered = true;
+			if (difficulty == 'easy'){
+				mod = -3
+			}else{
+				mod = -7
+			}
+			$("#toast_wrong").toast('show');
+			$(".toast-body").html('Score ' + mod)
+			score+=mod
+			score_val.innerHTML = score
+		}
+
+	}
+}
+
+function CleanURL(qry, cb){
+	qry = qry.toString().substring(32,)
+	console.log('CleanURL running! query:', qry)
+
+	queryAPI(qry, (data) => {
+		console.log('CleanURL Query responded with',data)
+		cb(data)
+	});
 }
 
 function setQn(difficulty, topic, focus, objname, cb){
@@ -135,16 +160,11 @@ function setQn(difficulty, topic, focus, objname, cb){
 		focus: Description
 		ans: 'Long description about the movie...'
 	*/
-	/* qns is an array of 
-
-	*/
 
 	function getRandQn(qnslist) {
 		//console.log("3: getqn stage")
 		randomqn = qnslist[getRandom(0,qnslist.length)]
-		if (typeof randomqn[focus] == Array){
-			console.log('array!!')
-		}
+
 		var qn = {
 			name: randomqn[objname],
 			id: randomqn['id'],
@@ -160,50 +180,75 @@ function setQn(difficulty, topic, focus, objname, cb){
 		qnArray.push(qn)
 	}
 
-	function CleanURL(qry, cb){
-		console.log('CleanURL running! query:', qry)
-		queryAPI(qry, (data) => {
-			cb(data)
-		});
-	}
-
-	// get and draw qn
+	// get and draw qn, options
 	queryAPI(topic, (result) => {
 		qn = getRandQn(result)
 		console.log(qn)
 		drawQn(qn)
 		addQn(qn)
-		addAns(qn.ans)
 
 		var qn2 = qn3 = qn
 		while (qn2.ans == qn.ans) {
 			console.log('rolling new qn2... got')
 			qn2 = getRandQn(result)
-			console.log(qn2.ans)
 		}
 		while (qn3.ans == qn.ans || qn3.ans == qn2.ans) {
 			console.log('rolling new qn3... got')
 			qn3 = getRandQn(result)
-			console.log(qn3.ans)
 		}
-		addAns( qn2.ans )
-		addAns( qn3.ans )
-		shuffle(ansArray)
-		ansArray.forEach(ans => {
-			drawAns(ans)
+
+		//1. check if answers are links, then cleans them up if it is
+		//2. after evaluating, THEN shuffle & print
+		var anslist = [qn.ans, qn2.ans, qn3.ans]
+		var count = 0
+		function fixLinksInAns(answerList, cb){
+			answerList.forEach(a =>{
+					console.log('debug ans is',a, typeof(a))
+					if (typeof a !== 'string'){ a = a[0] }
+					console.log('debug ans is now', a)
+					if (a.toString().substring(0,4) == 'http'){
+					CleanURL(a.toString(), (res) => {
+						console.log('debug ans', a)
+						if(a[32] == 'f'){ 
+							console.log('---- it`s a film!')
+							addAns(res.title) 
+						}
+						else {
+							console.log('---- it`s a people!')
+							addAns(res.name)
+						}
+						count++;
+						if (count === answerList.length) { cb(); }
+					});
+					} else {
+						addAns(a)
+						count++;
+						if (count === answerList.length) { cb(); }
+					}
+			});
+		}
+
+		fixLinksInAns(anslist, ()=>{
+			console.log('debug eval running now')
+			shuffle(ansArray)
+			ansArray.forEach(ans => {
+				console.log('debug drawing',ans)
+				drawAns(ans)
+			})
 		})
 		cb()
 	});
 
 
 	function addAns(ans){
+		console.log('debug ans added', ans)
 		ansArray.push(ans)
 	}
 }
 
 
 function queryAPI(query, cb) {
-	console.log('query is', query)
+	console.log('queryAPI() running! query is', query)
 	var request = new XMLHttpRequest()
 	request.open('GET', 'https://ghibliapi.herokuapp.com/' + query, true)
 	var receivedData;
