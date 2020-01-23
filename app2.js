@@ -35,10 +35,10 @@ function generateQuiz() {
 			var objname = 'title'
 			switch(difficulty){
 				case 'easy':
-					var focuses = ["description"]
+					var focuses = ["description", "director"]
 				break;
 				case 'difficult':
-					var focuses = ["release_date", "director"]
+					var focuses = ["release_date", "producer"]
 				break;
 			}
 			break;
@@ -49,7 +49,7 @@ function generateQuiz() {
 					var focuses = ["age", "gender"]
 				break;
 				case 'difficult':
-					var focuses = ["eye_color", "hair_color", "species"]
+					var focuses = ["eye_color", "hair_color", "species", "films"]
 				break;
 			}
 			break;
@@ -120,10 +120,7 @@ function generateQuiz() {
 			}else{
 				mod = 5;
 			}
-			$("#toast_correct").toast('show');
-			$(".toast-body").html('Score +' + mod)
-			score+=mod
-			score_val.innerHTML = score
+			showToast('correct',mod)
 			generateQuiz()
 		}else{
 			answered = true;
@@ -132,15 +129,26 @@ function generateQuiz() {
 			}else{
 				mod = -7
 			}
-			$("#toast_wrong").toast('show');
-			$(".toast-body").html('Score ' + mod)
-			score+=mod
-			score_val.innerHTML = score
+			showToast('wrong',mod)
 		}
 
 	}
 }
 
+function showToast(r,mod){
+	// show Toast and change score!
+	if (r == 'correct'){
+		$("#toast_correct").toast('show');
+			$(".toast-body").html('Score +' + mod)
+			score+=mod
+			score_val.innerHTML = score
+	} else {
+		$("#toast_wrong").toast('show');
+			$(".toast-body").html('Score ' + mod)
+			score+=mod
+			score_val.innerHTML = score
+	}
+}
 function CleanURL(qry, cb){
 	qry = qry.toString().substring(32,)
 	console.log('CleanURL running! query:', qry)
@@ -279,7 +287,51 @@ function drawQn(qn){
 	cardtext.setAttribute('class','card-text')
 
 	cardtitle.textContent = qn.topic.toUpperCase()
-	cardtext.textContent = "What is the " + qn.focus.split("_").join(" ") + " of " + qn.name + "?"
+
+	console.log('drawing qn!', 'name:',qn.name,'\ntopic:', qn.topic,'\nfocus:', qn.focus,'\nans:', qn.ans)
+	
+	qnW = ["What is the ", "Which of these ", "Which is the ", "Which of these ", "Who is the "]
+	qnOp = [" of ", " with ", " are of the ", " has the ", " are for the ", " has "]
+	qnEx = [" ", qn.topic + " "]
+
+	//grammar bits
+	if (qn.topic == 'vehicles' && qn.focus == 'films' ){
+		// What is the films with the vehicle x?
+		qnWord = qnW[0] // What is the
+		qnOperator = qnOp[1] // with
+		qnExtra =  qnEx[1] // vehicle
+	}else if(qn.topic == 'films' && qn.focus == 'director' ){
+		// Who is the director of film x?
+		qnWord = qnW[4] // Who is the
+		qnOperator = qnOp[0] // of
+		qnExtra = qnEx[0] //
+	}else if(qn.topic == 'locations' && qn.focus == 'films' ){
+		// Which is the films with locations x?
+		qnWord = qnW[1] // Which of these
+		qnOperator = qnOp[3] // has the
+		qnExtra = qnEx[1] // locations
+	}else if(qn.topic == 'species' && qn.focus == 'people' ){
+		// Which of these people are of the species Cat?
+		qnWord = qnW[3] // Which of these
+		qnOperator = qnOp[2] // are of the
+		qnExtra = qnEx[1] // species
+	}else if(qn.topic == 'vehicles' && qn.focus == 'description' ){
+		// Which of these description are for the vehicle Red Wing?
+		qnWord = qnW[3] // Which of these
+		qnOperator = qnOp[4] // are for the
+		qnExtra = qnEx[1] // vehicle
+	}else if(qn.topic == 'people' && qn.focus == 'films' ){
+		// Which of these films has Totoro?
+		qnWord = qnW[3] // Which of these
+		qnOperator = qnOp[5] // has
+		qnExtra = qnEx[0] // 
+	}else{
+		//default
+		qnWord = qnW[0]
+		qnOperator = qnOp[0]
+		qnExtra = qnEx[0]
+	}
+	cardtext.textContent = qnWord + qn.focus.split("_").join(" ") + qnOperator + qnExtra + qn.name + "?"
 
 	canvas.appendChild(qncard)
 	qncard.appendChild(cardtitle)
